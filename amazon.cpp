@@ -9,6 +9,7 @@
 #include "db_parser.h"
 #include "product_parser.h"
 #include "util.h"
+#include "mydatastore.h" //need for my derived
 
 using namespace std;
 struct ProdNameSorter {
@@ -29,8 +30,8 @@ int main(int argc, char* argv[])
      * Declare your derived DataStore object here replacing
      *  DataStore type to your derived type
      ****************/
-    DataStore ds;
-
+    MyDataStore ds;  //my
+    
 
 
     // Instantiate the individual section and product parsers we want
@@ -101,6 +102,66 @@ int main(int argc, char* argv[])
             }
 	    /* Add support for other commands here */
 
+        
+            else if ( cmd == "ADD" ) {
+                // ADD username x search_hit_number
+                //need to validate uname, check for invalidity, 
+                string username;
+                int hitIndex;   //going off hit vec
+                if (!(ss >> username) || !(ss >> hitIndex)) {    //there is nothing for it to parse
+                    cout << "Invalid request" << endl;          // missing args
+                }
+                else if (hitIndex < 1 || hitIndex > (int)hits.size()) {
+                    cout << "Invalid request" << endl;          // product out-of-range index
+                }
+                else if (!ds.isRealUser(username)) {                     //found user
+                    cout << "Invalid request" << endl;          // invalid username 
+                }
+                else {
+                    Product* p = hits[hitIndex - 1];            // 1-based to 0-based
+                    ds.addToCart(username, p);                  // FIFO add
+                }
+            }
+            else if ( cmd == "VIEWCART" ) {
+                //if username is not valid print out "Invalid Username"
+                //otherwise format MUST be
+                //Item #
+                //name
+                //type speciffic
+                //price and qty left
+                //need to use \n //not true
+                string username;
+                if (!(ss >> username)) {
+                    cout << "Invalid username" << endl;         // no username provided
+                }
+                else if (!ds.isRealUser(username)) {
+                    cout << "Invalid username" << endl;         // user not found
+                }
+                else {
+                    vector<Product*> cart = ds.viewCart(username); //make sure FIFO
+                    int itemNum = 1;
+                    for (vector<Product*>::iterator it = cart.begin(); it != cart.end(); ++it) {
+                        cout << "Item " << itemNum << endl;           //gives cart organization
+                        cout << (*it)->displayString() << endl;         //this will output the correct format, dereference and call func
+                        cout << endl;
+                        itemNum++;          //increment number of items as we move along
+                    }
+                }
+            }
+            else if ( cmd == "BUYCART" ) {
+                //BUYCART username
+                //check for valid username, try to buy items, needs to be FIFO and affordable and in stock (been chcekd)
+                string username;
+                if (!(ss >> username)) {
+                    cout << "Invalid username" << endl;  //no arg
+                }
+                else if (!ds.isRealUser(username)) {            //not real
+                    cout << "Invalid username" << endl;
+                }
+                else {
+                    ds.buyCart(username);                        // purchases what it can, rest stays FIFO
+                }
+            }
 
 
 
@@ -110,6 +171,7 @@ int main(int argc, char* argv[])
         }
 
     }
+    
     return 0;
 }
 

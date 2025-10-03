@@ -15,14 +15,36 @@ std::string convToLower(std::string src)
     to a set of words based on the criteria given in the assignment **/
 std::set<std::string> parseStringToWords(string rawWords)
 {
+    /*meant for product name, book author, and clothing brand
+        keyword is length >=2,  any punctuation splits the keyword -> you get multiple keywords, so check for only alphanumeric
+        store keywords in a set (dictionary for only keys), no need to store any values
+        needs to be case-insensitive, probably convert to lowercase
+    */
 
+    set<string> setOfKeys;        //this will hold our keywords for easy searching
+    string key;                   //I will be storing possible keys in here to then add to the set
 
+    for(size_t i = 0; i < rawWords.size(); ++i){
 
+        unsigned char checker = static_cast<unsigned char>(rawWords[i]);        //this loop basically just walks every char in rawWord, taking one so we can check is alphanum
+                                                                                //use unsigned for cctype
+        if(isalnum(checker)){               //checks alphanum
+            key.push_back(rawWords[i]);         //if it is add to possible key
+        }else{                                  //otherwise we ran into a punctuation so we check if our resulting key is valid
+            if(key.size() < 2){                 //not valid
+                key.clear();                    //throw it away
+            }else{
+                setOfKeys.insert(convToLower(key)); //otherwise add it to the set and make sure it in lowercase (so it is case-insensitive)
+                key.clear();                            //cleanup for next key
+            }
+        }        
+    }
 
+    if(key.size() >= 2){        
+        setOfKeys.insert(convToLower(key));  //if the loop ends without hitting a punctuation, there is a possibility that we could lose a key, this is to check for that
+    }
 
-
-
-
+    return setOfKeys;
 
 
 }
